@@ -4,26 +4,32 @@ import subprocess
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path.home() / "usr-bin" / "_lib"))
+sys.path.insert(0, str(Path.home() / "bin" / "_lib"))
+from common import add_env_val, clear_env, run_cmd
 from formatting import (
     GREEN,
     GREY,
     RESET,
     YELLOW,
-    add_env_cmd,
     get_group_input,
     print_group_end,
     print_group_start,
     print_group_step,
-    run_cmd,
 )
 
 PYENV_ROOT = Path.home() / ".pyenv" / "versions"
-BREW_PYTHON_PREFIX = Path("/opt/homebrew/opt")  # Apple Silicon; Intel is /usr/local/opt
-BREW_PYTHON_PREFIX_INTEL = Path("/usr/local/opt")
+BREW_PYTHON_PREFIX = Path("/opt/homebrew/opt")  # Apple Silicon
+BREW_PYTHON_PREFIX_INTEL = Path("/usr/local/opt")  # Intel
 
-PYTHON_BIN = Path("/usr/local/bin/python3")
-PYTHON_LEGACY_BIN = Path("/usr/local/bin/python")
+USR_LOCAL_BIN = Path("/usr/local/bin")
+
+
+def get_python_target(python_version: str) -> Path:
+    return USR_LOCAL_BIN / f"python-{python_version}"
+
+
+def get_bin_target(python_target: Path, bin_name: str) -> Path:
+    return python_target / bin_name
 
 
 def find_pyenv_python(version: str) -> Path | None:
@@ -40,7 +46,6 @@ def find_pyenv_python(version: str) -> Path | None:
 
 def find_brew_python(version: str) -> Path | None:
     """Return the Homebrew python binary for the given major.minor version, or None."""
-    # Homebrew formula names: python@3.11, python@3.12, etc.
     major_minor = ".".join(version.split(".")[:2])
     formula = f"python@{major_minor}"
     for prefix in (BREW_PYTHON_PREFIX, BREW_PYTHON_PREFIX_INTEL):
@@ -54,16 +59,19 @@ def find_brew_python(version: str) -> Path | None:
     return None
 
 
-def symlink_python(python_path: Path) -> None:
-    """Symlink /usr/local/bin/python3 and /usr/local/bin/python to python_path."""
-    for target in (PYTHON_BIN, PYTHON_LEGACY_BIN):
+def symlink_python(python_path: Path, python_target: Path) -> None:
+    """Symlink python3 and python into the versioned target dir."""
+    for name in ("python3", "python"):
+        target = get_bin_target(python_target, name)
         run_cmd(f"sudo ln -sf {python_path} {target}")
 
+
+# ── Main ──────────────────────────────────────────────────────────────────────
 
 print()
 print_group_start("Python Version Switcher")
 print_group_step(
-    f"{GREY}Enter a version installed in pyenv or via Homebrew (e.g. 3.11, 3.12.4){RESET}"
+    f"{GREY}Enter a version installed in pyenv or via Homebrew (e.g. 2.7.18, 3.11.9, 3.12.4){RESET}"
 )
 print_group_step("")
 version = get_group_input("Input Python version")
@@ -93,13 +101,16 @@ print_group_step(f"Found via {GREEN}{source}{RESET}: {GREEN}{python_path}{RESET}
 print_group_step("")
 
 # ── Symlink into /usr/local/bin ───────────────────────────────────────────────
-symlink_python(python_path)
+python_target = get_python_target(version)
+run_cmd(f"sudo mkdir -p {python_target}")
+symlink_python(python_path, python_target)
 
 # ── Verify ────────────────────────────────────────────────────────────────────
+python3_bin = get_bin_target(python_target, "python3")
 try:
     resolved_version = (
         subprocess.check_output(
-            [str(PYTHON_BIN), "--version"], stderr=subprocess.STDOUT
+            [str(python3_bin), "--version"], stderr=subprocess.STDOUT
         )
         .decode()
         .strip()
@@ -111,3 +122,10 @@ except Exception:
     )
 
 print_group_end(f"python / python3 → {python_path}  {GREY}(via {source}){RESET}")
+
+clear_env()
+add_env_val(
+    "PATH",
+    f"{python_target}:$PATH",
+    f"Ensures python symlinks found in {python_target} are first in path",
+)

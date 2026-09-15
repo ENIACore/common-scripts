@@ -14,22 +14,25 @@ from formatting import (
 )
 
 PYENV_ROOT = Path.home() / ".pyenv" / "versions"
-PYTHON_VERSION = "3.14.5"
-
-
-def setup_java() -> None:
-    print_group_start("Java Setup (26)")
-    result = run_cmd("/usr/libexec/java_home -v 26", capture_output=True)
-    java_home = result.stdout.strip()
-    add_env_val("JAVA_HOME", java_home, "Java 26 home directory")
-    print_group_step(f"JAVA_HOME → {java_home}")
-    print_group_end("Java home set", success=True)
+PYTHON_VERSION = "3.11.9"
 
 
 def setup_node() -> None:
-    print_group_start("Node Setup (nvm use 22)")
-    add_env_cmd("nvm use 22", "Ensure Node 22 is active")
-    print_group_end("Node 22 active", success=True)
+    print_group_start("Node Setup (nvm use 12)")
+    add_env_cmd("nvm use 12", "Ensure Node 12 is active")
+
+    print_group_step("Creating /usr/local/bin if missing...")
+    run_cmd("sudo mkdir -p /usr/local/bin")
+
+    print_group_step("Symlinking npm and node into /usr/local/bin...")
+    run_cmd('sudo ln -sf "$(which npm)" /usr/local/bin/npm')
+    run_cmd('sudo ln -sf "$(which node)" /usr/local/bin/node')
+
+    npm_link = run_cmd("ls -l /usr/local/bin/npm", capture_output=True).stdout.strip()
+    node_link = run_cmd("ls -l /usr/local/bin/node", capture_output=True).stdout.strip()
+    print_group_step(f"npm  → {npm_link}")
+    print_group_step(f"node → {node_link}")
+    print_group_end("npm and node symlinked", success=True)
 
 
 def setup_python() -> None:
@@ -56,12 +59,10 @@ def setup_python() -> None:
 
 def main() -> None:
     clear_env()
-    print_header(f"Environment Setup  |  Node 22 + Python {PYTHON_VERSION} + Java 26")
+    print_header(f"env-node-run  |  Node 12 + Python {PYTHON_VERSION}")
     setup_node()
     print()
     setup_python()
-    print()
-    setup_java()
     print_header("Setup Complete")
     print_warning(
         "Run `source ~/bin/source-env` to apply all exports to your current session."
