@@ -1,12 +1,5 @@
-#!/usr/bin/env python3
-
-from pathlib import Path
+import getpass
 from subprocess import CompletedProcess
-
-HOME = Path.home()
-USR_BIN = HOME / "bin"
-LIB_DIR = USR_BIN / "_lib"
-SCRIPTS_DIR = Path(__file__).parent.resolve()
 
 # Colors
 RED = "\033[91m"
@@ -83,6 +76,15 @@ def get_group_input(prompt, default: str = "") -> str:
     return reply if reply else default
 
 
+def get_group_password(prompt: str) -> str:
+    """Prompt for a password in the group style without echoing its value."""
+    full_prompt = (
+        f"  {BLUE}│{RESET}  {CYAN}{BOLD}[INPUT]{RESET} "
+        f"{CYAN}{prompt}{RESET}: "
+    )
+    return getpass.getpass(full_prompt)
+
+
 def get_input(prompt, default: str = "") -> str:
     """Prompt user for input with optional default. Returns the input string."""
     if default:
@@ -92,3 +94,28 @@ def get_input(prompt, default: str = "") -> str:
     full_prompt = f"{CYAN}{BOLD}[INPUT]{RESET} {CYAN}{prompt}{RESET}{suffix}"
     reply: str = input(full_prompt).strip()
     return reply if reply else default
+
+
+def run_cmd(cmd: str, capture_output: bool = False) -> CompletedProcess:
+    """Run a shell command, printing it first. Raises on non-zero exit."""
+    import subprocess
+
+    print_step(f"Running: {cmd}")
+    result = subprocess.run(
+        cmd,
+        shell=True,
+        capture_output=capture_output,
+        text=True,
+    )
+    if result.returncode == 0:
+        if capture_output and result.stdout:
+            print_success(result.stdout.strip())
+        else:
+            print_success("Command completed successfully")
+    else:
+        err = result.stderr.strip() if capture_output and result.stderr else ""
+        print_error(
+            f"Command failed (exit {result.returncode}){': ' + err if err else ''}"
+        )
+        result.check_returncode()  # raises CalledProcessError
+    return result

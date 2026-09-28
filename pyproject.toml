@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cli"
+version = "0.1.0"
+description = "Personal command-line utilities"
+requires-python = ">=3.10"
+dependencies = ["Pygments>=2.18"]
+
+[tool.setuptools.packages.find]
+include = ["cli", "cliutils"]
+
+[project.scripts]
+env-dp-run = "cli.env_dp_run:main"
+env-dp-vim = "cli.env_dp_vim:main"
+env-node-install = "cli.env_node_install:main"
+creds = "cli.creds:main"
+note = "cli.note:main"
+sql = "cli.sql:main"
+kill-jdtls = "cli.kill_jdtls:main"
+live-reload = "cli.live_reload:main"
+run-mfe-stack = "cli.run_mfe_stack:main"
+stop-mfe-stack = "cli.stop_mfe_stack:main"
