@@ -112,10 +112,25 @@ def delete_credential(credentials: Credentials) -> int:
     return 0
 
 
+def list_credentials(credentials: Credentials) -> int:
+    if not credentials:
+        print_group_start("No credentials saved")
+        print_group_end("Use 'creds add' to create an entry.", success=False)
+        return 1
+
+    print()
+    print_group_start("Saved credentials")
+    for title in sorted(credentials, key=str.casefold):
+        print_group_step(title)
+    print_group_end()
+    return 0
+
+
 def usage() -> None:
-    print("\n  Usage: creds add | get | delete")
+    print("\n  Usage: creds add | get | list | delete")
     print("    creds add       # add credentials")
     print("    creds get       # display credentials and copy the password")
+    print("    creds list      # list saved credential titles")
     print("    creds delete    # delete credentials\n")
 
 
@@ -125,7 +140,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if action in ("-h", "--help", "help"):
         usage()
         return 0
-    if action not in {"add", "get", "delete"}:
+    if action not in {"add", "get", "list", "delete"}:
         usage()
         return 2
 
@@ -134,6 +149,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return add_credential(credentials)
     if action == "delete":
         return delete_credential(credentials)
+    if action == "list":
+        return list_credentials(credentials)
     return get_credential(credentials)
 
 

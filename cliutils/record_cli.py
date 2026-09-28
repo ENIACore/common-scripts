@@ -188,6 +188,23 @@ def _delete_record(path: Path, records: RecordStore, label: str) -> int:
     return 0
 
 
+def _list_records(records: RecordStore, label: str) -> int:
+    if not records or not any(records.values()):
+        print_group_start(f"No {label} entries saved")
+        print_group_end("Use the add option to create one.", success=False)
+        return 1
+
+    print()
+    print_group_start(f"Saved {label} entries")
+    for subject in sorted(records, key=str.casefold):
+        for title, entry in sorted(
+            records[subject].items(), key=lambda item: item[0].casefold()
+        ):
+            print_group_step(f"{subject}: {title} - {entry['description']}")
+    print_group_end()
+    return 0
+
+
 def run_record_command(
     command: str,
     label: str,
@@ -207,15 +224,17 @@ def run_record_command(
             "add": f"add a {label} with a subject, title, description, and content lines",
             "get": f"select a subject and title, display the {label}, and copy its content",
             "delete": f"select a subject and title, then confirm deletion of the {label}",
+            "list": f"list saved {label} entries",
         }
         print(f"\n{command}")
-        print(f"\n  Usage: {command} add | get | delete")
+        print(f"\n  Usage: {command} add | get | list | delete")
         print(f"    {command} add       # {descriptions['add']}")
         print(f"    {command} get       # {descriptions['get']}")
+        print(f"    {command} list      # {descriptions['list']}")
         print(f"    {command} delete    # {descriptions['delete']}\n")
         return 0
-    if action not in {"add", "delete", "get"}:
-        print(f"Usage: {command} add | get | delete")
+    if action not in {"add", "delete", "get", "list"}:
+        print(f"Usage: {command} add | get | list | delete")
         return 2
 
     records = load_records(path)
@@ -223,6 +242,8 @@ def run_record_command(
         return _add_record(path, records, label, line_prompt, validate_lines)
     if action == "delete":
         return _delete_record(path, records, label)
+    if action == "list":
+        return _list_records(records, label)
     return _get_record(
         records,
         label,

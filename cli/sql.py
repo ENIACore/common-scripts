@@ -36,6 +36,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         action_descriptions={
             "add": "add a query with a subject, title, description, and SQL lines",
             "get": "select a subject and title, display highlighted SQL, and copy it",
+            "list": "list saved queries by subject and title",
             "delete": "select a subject and title, then confirm deletion of the query",
         },
     )

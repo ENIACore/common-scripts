@@ -17,6 +17,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         action_descriptions={
             "add": "add a note with a subject, title, description, and content lines",
             "get": "select a subject and title, display the note, and copy its content",
+            "list": "list saved notes by subject and title",
             "delete": "select a subject and title, then confirm deletion of the note",
         },
     )
