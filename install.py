@@ -21,8 +21,6 @@ COMMANDS = (
     "sql",
     "kill-jdtls",
     "live-reload",
-    "run-mfe-stack",
-    "stop-mfe-stack",
 )
 RESERVED_COMMANDS = set(COMMANDS) | {"java-v", "node-v", "python-v"}
 LOCAL_SCRIPTS_DIR = PROJECT_DIR / "local"
